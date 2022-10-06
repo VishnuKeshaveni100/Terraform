@@ -1,0 +1,100 @@
+main.tf
+
+resource "aws_instance" "myjenkins" {
+    ami            = var.ami
+    instance_type  = var.instance_type
+    key_name       = var.key_name
+    count          = 1
+
+  tags = {
+    "Name"      = "Jenkins_Server"
+    "Terraform" = "true"
+  }
+}
+
+###seurity groups
+
+resource "aws_security_group" "mysec" {
+    name        = var.sec_name
+    description = "to allow the inbound traffic"
+    vpc_id = var.vpc_id
+
+  ingress {
+    from_port        = 8080
+    to_port          = 8080
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port        = 22
+    to_port          = 22
+    protocol         = "tcp"
+    cidr_blocks       = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "mysec"
+  }
+} 
+
+###################################################
+provider.tf
+
+provider "aws" {
+    region = var.region
+    access_key = var.access_key
+    secret_key = var.secret_key
+}
+#####################################################
+variable.tf
+variable "region" {
+    type = string
+}
+
+variable "access_key" {
+    type = string
+}
+
+variable "secret_key" {
+    type = string
+}
+
+variable "ami" {
+    type = string
+}
+
+variable "instance_type" {
+    type = string
+
+}
+
+variable "key_name" {
+    type = string
+}
+
+variable "sec_name" {
+    type = string
+}
+
+variable "vpc_id" {
+    type = string
+}
+########################################################
+terraform.tfvars
+region = "ap-south-1"
+access_key = ""
+secret_key = ""
+ami = ""
+instance_type = "t2.micro"
+key_name  = ""
+sec_name  = ""
+vpc_id = ""
+
