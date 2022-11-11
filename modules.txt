@@ -1,0 +1,82 @@
+Terraform Project Structure
+
+Understanding a Terraform Project Structure:
+
+In this section, you’ll learn what Terraform considers a project, how you can structure the infrastructure code, and when to choose which approach. You’ll also learn about Terraform workspaces, what they do, and how Terraform is storing state.
+
+A resource is an entity of a cloud service (such as a DigitalOcean Droplet) declared in Terraform code that is created according to specified and inferred properties. Multiple resources form infrastructure with their mutual connections.
+
+Terraform uses a specialized programming language for defining infrastructure, called Hashicorp Configuration Language (HCL). HCL code is typically stored in files ending with the extension tf. A Terraform project is any directory that contains tf files and which has been initialized using the init command, which sets up Terraform caches and default local state.
+
+Terraform state is the mechanism via which it keeps track of resources that are actually deployed in the cloud. State is stored in backends (locally on disk or remotely on a file storage cloud service or specialized state management software) for optimal redundancy and reliability. You can read more about different backends in the Terraform documentation.
+
+Project workspaces allow you to have multiple states in the same backend, tied to the same configuration. This allows you to deploy multiple distinct instances of the same infrastructure. Each project starts with a workspace named default—this will be used if you do not explicitly create or switch to another one.
+
+Modules in Terraform (akin to libraries in other programming languages) are parametrized code containers enclosing multiple resource declarations. They allow you to abstract away a common part of your infrastructure and reuse it later with different inputs.
+
+A Terraform project can also include external code files for use with dynamic data inputs, which can parse the JSON output of a CLI command and offer it for use in resource declarations. In this tutorial, you’ll do this with a Python script.
+
+Now that you know what a Terraform project consists of, let’s review two general approaches to Terraform project structuring.
+
+There are two structures 
+
+ 1) Simple Structure
+ 2) Complex Structure
+ 
+ 
+1) Simple Structure:
+
+A simple structure is suitable for small and testing projects, with a few resources of varying types and variables. It has a few configuration files, usually one per resource type (or more helper ones together with a main), and no custom modules, because most of the resources are unique and there aren’t enough to be generalized and reused. Following this, most of the code is stored in the same directory, next to each other. These projects often have a few variables (such as an API key for accessing the cloud) and may use dynamic data inputs and other Terraform and HCL features, though not prominently.
+
+As an example of the file structure of this approach, this is what the project you’ll build in this tutorial will look like in the end:
+
+.
+└── tf/
+    ├── versions.tf
+    ├── variables.tf
+    ├── provider.tf
+    ├── droplets.tf
+    ├── dns.tf
+    ├── data-sources.tf
+    └── external/
+        └── name-generator.py
+
+As this project will deploy an Apache web server Droplet and set up DNS records, the definitions of project variables, the DigitalOcean Terraform provider, the Droplet, and DNS records will be stored in their respective files. The minimum required Terraform and DigitalOcean provider versions will be specified in versions.tf, while the Python script that will generate a name for the Droplet (and be used as a dynamic data source in data-sources.tf) will be stored in the external folder, to separate it from HCL code.
+
+2) Complex Structure:
+
+Contrary to the simple structure, this approach is suitable for large projects, with clearly defined subdirectory structures containing multiple modules of varying levels of complexity, aside from the usual code. These modules can depend on each other. Coupled with version control systems, these projects can make extensive use of workspaces. This approach is suitable for larger projects managing multiple apps, while reusing code as much as possible.
+
+Development, staging, quality assurance, and production infrastructure instances can also be housed under the same project in different directories by relying on common modules, thus eliminating duplicate code and making the project the central source of truth. Here is the file structure of an example project with a more complex structure, containing multiple deployment apps, Terraform modules, and target cloud environments:
+
+.
+└── tf/
+    ├── modules/
+    │   ├── network/
+    │   │   ├── main.tf
+    │   │   ├── dns.tf
+    │   │   ├── outputs.tf
+    │   │   └── variables.tf
+    │   └── spaces/
+    │       ├── main.tf
+    │       ├── outputs.tf
+    │       └── variables.tf
+    └── applications/
+        ├── backend-app/
+        │   ├── env/
+        │   │   ├── dev.tfvars
+        │   │   ├── staging.tfvars
+        │   │   ├── qa.tfvars
+        │   │   └── production.tfvars
+        │   └── main.tf
+        └── frontend-app/
+            ├── env/
+            │   ├── dev.tfvars
+            │   ├── staging.tfvars
+            │   ├── qa.tfvars
+            │   └── production.tfvars
+            └── main.tf
+
+This approach is explored further in the series How to Manage Infrastructure with Terraform.
+
+You now know what a Terraform project is, how to best structure it according to perceived complexity, and what role Terraform workspaces serve. In the next steps, you’ll create a project with a simple structure that will provision a Droplet with an Apache web server installed and DNS records set up for your domain. You’ll first initialize your project with the DigitalOcean provider and variables, and then proceed to define the Droplet, a dynamic data source to provide its name, and a DNS record for deployment
